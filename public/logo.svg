@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="8" y1="4" x2="58" y2="60" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#243949"/>
+      <stop offset="1" stop-color="#12202c"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="14" y1="12" x2="50" y2="52" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#e2c48a"/>
+      <stop offset="0.5" stop-color="#c8a96e"/>
+      <stop offset="1" stop-color="#9a7a42"/>
+    </linearGradient>
+    <linearGradient id="page" x1="18" y1="14" x2="46" y2="50" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#f7f5f0"/>
+      <stop offset="1" stop-color="#e8e4db"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="url(#bg)"/>
+  <rect x="2.5" y="2.5" width="59" height="59" rx="12" stroke="url(#gold)" stroke-opacity="0.55" stroke-width="1.5"/>
+  <!-- document -->
+  <path
+    d="M20 14.5h18.2L44 20.3V49.5a2.5 2.5 0 0 1-2.5 2.5h-19A2.5 2.5 0 0 1 20 49.5v-35Z"
+    fill="url(#page)"
+  />
+  <path d="M38.2 14.5V19a1.8 1.8 0 0 0 1.8 1.8H44" fill="#d4cfc4"/>
+  <path d="M38.2 14.5L44 20.3h-4a1.8 1.8 0 0 1-1.8-1.8v-4Z" fill="#c8a96e" fill-opacity="0.55"/>
+  <!-- text lines -->
+  <path d="M25 28h14" stroke="#1a2a3a" stroke-opacity="0.35" stroke-width="2" stroke-linecap="round"/>
+  <path d="M25 33.5h14" stroke="#1a2a3a" stroke-opacity="0.28" stroke-width="2" stroke-linecap="round"/>
+  <path d="M25 39h9" stroke="#1a2a3a" stroke-opacity="0.22" stroke-width="2" stroke-linecap="round"/>
+  <!-- flare accent -->
+  <path
+    d="M47.5 18.5c1.8 4.2 3.6 6.8 7 9.2-3.4 2.4-5.2 5-7 9.2-1.8-4.2-3.6-6.8-7-9.2 3.4-2.4 5.2-5 7-9.2Z"
+    fill="url(#gold)"
+  />
+</svg>

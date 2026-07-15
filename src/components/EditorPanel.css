@@ -1,0 +1,146 @@
+.editor-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  height: 100%;
+  min-width: 0;
+  padding: 1.25rem 1.35rem;
+  background:
+    linear-gradient(165deg, rgba(26, 42, 58, 0.04) 0%, transparent 40%),
+    var(--surface);
+  border-right: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.editor-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding-bottom: 0.25rem;
+}
+
+.editor-brand-mark {
+  width: 2.35rem;
+  height: 2.35rem;
+  border-radius: 0.55rem;
+  flex-shrink: 0;
+  display: block;
+  box-shadow:
+    0 1px 2px rgba(15, 28, 40, 0.12),
+    0 4px 12px rgba(15, 28, 40, 0.1);
+}
+
+.editor-brand-name {
+  margin: 0;
+  font-family: var(--font-ui);
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  line-height: 1.2;
+}
+
+.editor-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  min-height: 0;
+}
+
+.editor-section-grow {
+  flex: 1;
+}
+
+.editor-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.editor-section-title {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.editor-fields {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.editor-fields-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.55rem;
+  min-width: 0;
+}
+
+.editor-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.editor-field span {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.editor-field input,
+.editor-field .editor-textarea {
+  width: 100%;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: 0.35rem;
+  background: var(--surface-raised);
+  color: #000;
+  font-family: var(--font-ui);
+  font-size: 0.875rem;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.editor-field .editor-textarea {
+  resize: vertical;
+  min-height: 2.75rem;
+  line-height: 1.45;
+}
+
+.editor-field input:focus,
+.editor-field .editor-textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.editor-field-grow {
+  flex: 1;
+  min-height: 0;
+}
+
+.editor-markdown {
+  flex: 1;
+  width: 100%;
+  min-height: 12rem;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: 0.35rem;
+  background: var(--surface-raised);
+  color: #000;
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  line-height: 1.55;
+  resize: none;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.editor-markdown:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}

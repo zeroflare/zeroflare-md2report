@@ -1,0 +1,148 @@
+:root {
+  --font-kai: '標楷體', 'BiauKai', 'DFKai-SB', 'TW-Kai', 'KaiTi', 'STKaiti', serif;
+  --font-display: var(--font-kai);
+  --font-ui: 'Instrument Sans', 'Noto Sans TC', 'Helvetica Neue', sans-serif;
+  --font-report: var(--font-kai);
+  --font-mono: 'JetBrains Mono', 'SF Mono', ui-monospace, monospace;
+
+  --ink: #1a2a3a;
+  --ink-soft: #3a4d5c;
+  --muted: #6b7c8a;
+  --surface: #eef1f4;
+  --surface-raised: #ffffff;
+  --border: #d0d7de;
+  --accent: #8b6b3d;
+  --accent-glow: rgba(200, 169, 110, 0.28);
+  --preview-bg: #d8dee5;
+
+  --report-ink: #000;
+  --report-ink-soft: #000;
+  --report-muted: #000;
+  --report-accent: #c8a96e;
+  --report-rule: #d5dbe1;
+  --report-dots: #b8c0c8;
+  --report-link: #000;
+
+  font-family: var(--font-ui);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: var(--ink);
+  background: var(--surface);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+}
+
+/* ——— Print / PDF export ——— */
+@page {
+  size: A4;
+  margin: 0;
+}
+
+@media print {
+  html,
+  body,
+  #root {
+    height: auto !important;
+    overflow: visible !important;
+    background: #fff !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .app-shell {
+    display: block !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  .preview-panel {
+    height: auto !important;
+    overflow: visible !important;
+    background: none !important;
+  }
+
+  .preview-scroll {
+    padding: 0 !important;
+    overflow: visible !important;
+    height: auto !important;
+  }
+
+  .preview-scale-wrap {
+    width: auto !important;
+    height: auto !important;
+  }
+
+  .preview-stack {
+    transform: none !important;
+    gap: 0 !important;
+    width: auto !important;
+    margin: 0 !important;
+  }
+
+  .a4-page {
+    box-shadow: none !important;
+    margin: 0 !important;
+    background: #fff !important;
+    page-break-after: always;
+    break-after: page;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .a4-page:last-child {
+    page-break-after: auto;
+    break-after: auto;
+  }
+
+  .cover-page,
+  .toc-page,
+  .report-page {
+    background: #fff !important;
+  }
+
+  .report-prose h1,
+  .report-prose h2 {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .page-frame,
+  .page-header,
+  .page-footer,
+  .page-header::before,
+  .page-header::after,
+  .page-footer::before,
+  .page-footer::after {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .report-prose code,
+  .report-prose pre,
+  .report-prose th {
+    background: transparent !important;
+  }
+
+  .measure-host {
+    display: none !important;
+  }
+}
