@@ -208,11 +208,10 @@
 }
 
 .report-prose h2 {
-  font-size: 1.2rem;
-  margin: 3.2em 0 0.45em;
-  padding-bottom: 0.25em;
-  border-bottom: 2px solid #1a2a3a;
-  -webkit-text-stroke: 0.45px currentColor;
+  font-size: 1.55rem;
+  margin: 3.2em 0 0.55em;
+  padding-bottom: 0.3em;
+  border-bottom: 2.5px solid #1a2a3a;
 }
 
 .report-prose h2:first-child {

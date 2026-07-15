@@ -18,8 +18,7 @@ interface PreviewPanelProps {
   markdown: string
   onExportPdf: () => void
   onExportWord: () => void
-  onSaveDraft: () => void
-  saveHint?: string | null
+  onResetSample: () => void
 }
 
 const ZOOM_MIN = 0.4
@@ -38,8 +37,7 @@ export function PreviewPanel({
   markdown,
   onExportPdf,
   onExportWord,
-  onSaveDraft,
-  saveHint,
+  onResetSample,
 }: PreviewPanelProps) {
   const measureRef = useRef<HTMLDivElement>(null)
   const stackRef = useRef<HTMLDivElement>(null)
@@ -238,9 +236,8 @@ export function PreviewPanel({
           </div>
         </div>
         <div className="preview-export-actions">
-          {saveHint ? <span className="preview-save-hint">{saveHint}</span> : null}
-          <button type="button" className="btn-export" onClick={onSaveDraft}>
-            暫存資料
+          <button type="button" className="btn-export" onClick={onResetSample}>
+            恢復範例
           </button>
           <button type="button" className="btn-export" onClick={onExportWord}>
             匯出 Word

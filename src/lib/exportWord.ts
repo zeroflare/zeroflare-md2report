@@ -100,24 +100,23 @@ function tokenToParagraphs(token: Tokens.Generic): Paragraph[] {
   switch (token.type) {
     case 'heading': {
       const t = token as Tokens.Heading
+      if (t.depth === 1) return []
       const level =
-        t.depth <= 1
+        t.depth === 2
           ? HeadingLevel.HEADING_1
-          : t.depth === 2
+          : t.depth === 3
             ? HeadingLevel.HEADING_2
-            : t.depth === 3
+            : t.depth === 4
               ? HeadingLevel.HEADING_3
-              : t.depth === 4
+              : t.depth === 5
                 ? HeadingLevel.HEADING_4
-                : t.depth === 5
-                  ? HeadingLevel.HEADING_5
-                  : HeadingLevel.HEADING_6
+                : HeadingLevel.HEADING_5
       return [
         new Paragraph({
           heading: level,
           spacing: { before: 280, after: 140 },
           border:
-            t.depth <= 2
+            t.depth === 2
               ? {
                   bottom: {
                     style: BorderStyle.SINGLE,
@@ -268,17 +267,15 @@ function tocParagraphs(markdown: string): Paragraph[] {
   if (!headings.length) {
     paras.push(
       new Paragraph({
-        children: [textRun('尚無標題。請在 Markdown 使用 #、##、###。')],
+        children: [textRun('尚無標題。請在 Markdown 使用 ##、###。')],
       }),
     )
   } else {
     for (const entry of headings) {
       const indent =
-        entry.level === 1
-          ? 0
-          : entry.level === 2
-            ? convertInchesToTwip(0.2)
-            : convertInchesToTwip(0.4)
+        entry.level === 2
+          ? convertInchesToTwip(0.2)
+          : convertInchesToTwip(0.4)
       paras.push(
         new Paragraph({
           spacing: { after: 100 },

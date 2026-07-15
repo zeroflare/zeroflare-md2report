@@ -8,5 +8,5 @@ export interface CoverMeta {
 export interface TocEntry {
   id: string
   text: string
-  level: 1 | 2 | 3
+  level: 2 | 3
 }

@@ -16,16 +16,16 @@ function slugify(text: string): string {
     || 'heading'
 }
 
-/** TOC includes `#` / `##` / `###`. Articles typically have only one `#`. */
+/** TOC includes `##` / `###` only — `#` is omitted from TOC and body. */
 export function extractHeadings(markdown: string): TocEntry[] {
   const entries: TocEntry[] = []
   const seen = new Map<string, number>()
   const lines = markdown.split('\n')
 
   for (const line of lines) {
-    const match = /^(#{1,3})\s+(.+)$/.exec(line)
+    const match = /^(#{2,3})\s+(.+)$/.exec(line)
     if (!match) continue
-    const level = match[1].length as 1 | 2 | 3
+    const level = match[1].length as 2 | 3
     const text = match[2].replace(/#+\s*$/, '').trim()
     if (!text) continue
 
@@ -49,7 +49,9 @@ export function renderMarkdown(markdown: string): string {
 
   renderer.heading = function (token) {
     const level = token.depth
-    if (level >= 1 && level <= 3 && headingIndex < headings.length) {
+    // Hide document H1 — cover already carries the report title
+    if (level === 1) return ''
+    if (level >= 2 && level <= 3 && headingIndex < headings.length) {
       const entry = headings[headingIndex]
       headingIndex += 1
       const text = this.parser.parseInline(token.tokens)
@@ -109,7 +111,7 @@ export const SAMPLE_MARKDOWN = `# 國家資通安全研究院資安顧問案
 
 ### 自動目錄
 
-系統會掃描 Markdown 中的標題，自動建立目錄，並標示對應頁碼。整篇文章通常只有一個 \`#\`，其餘以 \`##\`、\`###\` 組織小節。
+系統會掃描 Markdown 中的 \`##\`／\`###\` 標題，自動建立目錄，並標示對應頁碼。\`#\` 不會出現在目錄與內文（封面另有標題）。
 
 ### 分頁與頁碼
 
@@ -119,7 +121,7 @@ export const SAMPLE_MARKDOWN = `# 國家資通安全研究院資安顧問案
 
 ### Markdown 結構建議
 
-建議以單一 \`#\` 作為全文標題、\`##\` 作為章節、\`###\` 作為細節說明。
+建議以 \`##\` 作為章節、\`###\` 作為細節說明。全文開頭的 \`#\` 可省略，不會顯示於報告內文。
 
 ### 列表與強調
 

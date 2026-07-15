@@ -50,8 +50,9 @@ function groupByH2(children: HTMLElement[]): HTMLElement[][] {
 }
 
 /**
- * Pack nodes onto pages. Never leave a heading stranded alone at the bottom —
- * move it to the next page together with the following block.
+ * Pack content onto pages by height. Multiple H2 sections may share a page
+ * when they fit; only start a new page when the next block would overflow.
+ * Avoid leaving a heading stranded alone at the bottom of a page.
  */
 function appendNodesToPages(
   pages: HTMLElement[][],
@@ -101,25 +102,21 @@ function splitIntoPages(
     const height = groupHeight(group)
     const page = pages[pages.length - 1]
     const pageEmpty = page.length === 0
-    const startsWithH2 = group[0]?.tagName === 'H2'
+    const used = groupHeight(page)
 
-    // Each H2 section begins on its own page (Appendix C included)
-    if (startsWithH2 && !pageEmpty) {
-      if (height <= contentHeightPx) {
-        pages.push([...group])
-        continue
-      }
-      appendNodesToPages(pages, group, contentHeightPx, true)
-      continue
-    }
-
-    // Preamble / empty page
-    if (height <= contentHeightPx) {
+    // Whole section fits on the current page — keep it there (even with other H2s)
+    if (pageEmpty || used + height <= contentHeightPx) {
       page.push(...group)
       continue
     }
 
-    appendNodesToPages(pages, group, contentHeightPx, !pageEmpty)
+    // Does not fit here: move to a fresh page, splitting only if taller than one page
+    if (height <= contentHeightPx) {
+      pages.push([...group])
+      continue
+    }
+
+    appendNodesToPages(pages, group, contentHeightPx, true)
   }
 
   return pages.filter((p, i) => p.length > 0 || i === 0)
