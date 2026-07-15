@@ -1,8 +1,8 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   plugins: [react()],
-  // GitHub Pages project site: https://zeroflare.github.io/zeroflare-md2report/
-  base: '/zeroflare-md2report/',
-})
+  // Local `vite` stays at `/`; production build uses the GitHub Pages project path.
+  base: command === 'serve' ? '/' : '/zeroflare-md2report/',
+}))
