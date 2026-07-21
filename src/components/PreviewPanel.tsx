@@ -1,13 +1,23 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
-import type { CoverMeta, TocEntry } from '../types'
-import { extractHeadings, renderMarkdown } from '../lib/markdown'
+import type { CaptionEntry, CoverMeta, TocEntry } from '../types'
+import {
+  captionToTocEntry,
+  captionsByKind,
+  extractCaptions,
+  extractHeadings,
+  renderMarkdown,
+} from '../lib/markdown'
 import {
   CONTENT_HEIGHT_PX,
   PAGE_BOTTOM_SAFETY_PX,
-  mapHeadingsToPages,
+  mapIdsToPages,
   paginateHtml,
   type PageChunk,
 } from '../lib/paginate'
+import {
+  measureAndPaginateToc,
+  replaceTocChunksIfChanged,
+} from '../lib/paginateToc'
 import { CoverPage } from './CoverPage'
 import { TocPage } from './TocPage'
 import { ReportPages } from './ReportPages'
@@ -40,12 +50,17 @@ export function PreviewPanel({
   onResetSample,
 }: PreviewPanelProps) {
   const measureRef = useRef<HTMLDivElement>(null)
+  const measureTocRef = useRef<HTMLDivElement>(null)
   const stackRef = useRef<HTMLDivElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const scaleWrapRef = useRef<HTMLDivElement>(null)
   const [pages, setPages] = useState<PageChunk[]>([{ html: '', pageNumber: 1 }])
   const [pageMap, setPageMap] = useState<Record<string, number>>({})
   const [headings, setHeadings] = useState<TocEntry[]>([])
+  const [captions, setCaptions] = useState<CaptionEntry[]>([])
+  const [tocChunks, setTocChunks] = useState<TocEntry[][]>([[]])
+  const [tableTocChunks, setTableTocChunks] = useState<TocEntry[][]>([])
+  const [figureTocChunks, setFigureTocChunks] = useState<TocEntry[][]>([])
   const [html, setHtml] = useState('')
   const [fitScale, setFitScale] = useState(1)
   const [zoom, setZoom] = useState(1)
@@ -63,6 +78,7 @@ export function PreviewPanel({
 
   useEffect(() => {
     setHeadings(extractHeadings(markdown))
+    setCaptions(extractCaptions(markdown))
     setHtml(renderMarkdown(markdown))
   }, [markdown])
 
@@ -79,12 +95,55 @@ export function PreviewPanel({
     const contentHeight = Math.max(240, rawHeight - PAGE_BOTTOM_SAFETY_PX)
 
     const nextPages = paginateHtml(el, contentHeight)
-    const ids = headings.map((h) => h.id)
-    const nextMap = mapHeadingsToPages(el, contentHeight, ids)
+    const ids = [
+      ...headings.map((h) => h.id),
+      ...captions.map((c) => c.id),
+    ]
+    const nextMap = mapIdsToPages(el, contentHeight, ids)
 
     setPages(nextPages.length ? nextPages : [{ html: '', pageNumber: 1 }])
     setPageMap(nextMap)
-  }, [html, headings])
+  }, [html, headings, captions])
+
+  useLayoutEffect(() => {
+    const stack = stackRef.current
+    const measure = measureTocRef.current
+    if (!stack || !measure) return
+
+    const tocInner = stack.querySelector('.toc-inner') as HTMLElement | null
+    const rawHeight = tocInner?.clientHeight || CONTENT_HEIGHT_PX
+    const contentHeight = Math.max(200, rawHeight - PAGE_BOTTOM_SAFETY_PX)
+    const { tables, figures } = captionsByKind(captions)
+
+    const nextToc = measureAndPaginateToc(
+      measure,
+      headings,
+      pageMap,
+      contentHeight,
+      '目錄',
+    )
+    setTocChunks((prev) =>
+      replaceTocChunksIfChanged(prev, nextToc.length ? nextToc : [[]]),
+    )
+
+    const nextTables = measureAndPaginateToc(
+      measure,
+      tables.map(captionToTocEntry),
+      pageMap,
+      contentHeight,
+      '表目錄',
+    )
+    setTableTocChunks((prev) => replaceTocChunksIfChanged(prev, nextTables))
+
+    const nextFigures = measureAndPaginateToc(
+      measure,
+      figures.map(captionToTocEntry),
+      pageMap,
+      contentHeight,
+      '圖目錄',
+    )
+    setFigureTocChunks((prev) => replaceTocChunksIfChanged(prev, nextFigures))
+  }, [headings, captions, pageMap])
 
   useLayoutEffect(() => {
     const stack = stackRef.current
@@ -102,7 +161,7 @@ export function PreviewPanel({
     const ro = new ResizeObserver(syncSize)
     ro.observe(stack)
     return () => ro.disconnect()
-  }, [pages, headings, meta])
+  }, [pages, tocChunks, tableTocChunks, figureTocChunks, headings, meta])
 
   useEffect(() => {
     const container = scrollRef.current
@@ -128,7 +187,6 @@ export function PreviewPanel({
     return () => ro.disconnect()
   }, [])
 
-  // Keep cursor point stable after wheel zoom (runs before paint)
   useLayoutEffect(() => {
     const anchor = zoomAnchorRef.current
     const container = scrollRef.current
@@ -166,16 +224,12 @@ export function PreviewPanel({
     function onWheel(event: WheelEvent) {
       if (!(event.ctrlKey || event.metaKey)) return
       event.preventDefault()
-
-      const scroller = scrollRef.current
       const wrap = scaleWrapRef.current
-      if (!scroller || !wrap) return
+      if (!wrap || !container) return
 
-      const oldScale = scaleRef.current
       const fit = fitScaleRef.current
       const minZ = ZOOM_MIN / Math.max(fit, 0.01)
       const maxZ = ZOOM_MAX / Math.max(fit, 0.01)
-
       const direction = event.deltaY > 0 ? -1 : 1
       const intensity = Math.min(0.18, Math.max(0.04, Math.abs(event.deltaY) / 400))
       const nextZoom = Math.min(
@@ -184,15 +238,13 @@ export function PreviewPanel({
       )
       if (Math.abs(nextZoom - zoomRef.current) < 0.0005) return
 
-      const containerRect = scroller.getBoundingClientRect()
+      const containerRect = container.getBoundingClientRect()
       const wrapRect = wrap.getBoundingClientRect()
-      zoomAnchorRef.current = {
-        contentX: (event.clientX - wrapRect.left) / oldScale,
-        contentY: (event.clientY - wrapRect.top) / oldScale,
-        mouseX: event.clientX - containerRect.left,
-        mouseY: event.clientY - containerRect.top,
-      }
-
+      const mouseX = event.clientX - containerRect.left
+      const mouseY = event.clientY - containerRect.top
+      const contentX = (mouseX - (wrapRect.left - containerRect.left)) / scaleRef.current
+      const contentY = (mouseY - (wrapRect.top - containerRect.top)) / scaleRef.current
+      zoomAnchorRef.current = { contentX, contentY, mouseX, mouseY }
       setZoom(nextZoom)
     }
 
@@ -206,7 +258,7 @@ export function PreviewPanel({
     <div className="preview-panel">
       <div className="preview-toolbar no-print">
         <div className="preview-toolbar-left">
-          <div className="preview-zoom" title="也可 Ctrl / ⌘ + 滾輪縮放">
+          <div className="preview-zoom">
             <button
               type="button"
               className="preview-zoom-btn"
@@ -266,13 +318,42 @@ export function PreviewPanel({
             ref={stackRef}
           >
             <CoverPage meta={meta} />
-            <TocPage
-              entries={headings}
-              pageMap={pageMap}
-              title={meta.title}
-              subtitle={meta.subtitle}
-              company={meta.company}
-            />
+            {(tocChunks.length ? tocChunks : [[]]).map((chunk, index) => (
+              <TocPage
+                key={`toc-${index}`}
+                entries={chunk}
+                pageMap={pageMap}
+                title={meta.title}
+                subtitle={meta.subtitle}
+                company={meta.company}
+                headingTitle="目錄"
+                showHeading={index === 0}
+              />
+            ))}
+            {tableTocChunks.map((chunk, index) => (
+              <TocPage
+                key={`table-toc-${index}`}
+                entries={chunk}
+                pageMap={pageMap}
+                title={meta.title}
+                subtitle={meta.subtitle}
+                company={meta.company}
+                headingTitle="表目錄"
+                showHeading={index === 0}
+              />
+            ))}
+            {figureTocChunks.map((chunk, index) => (
+              <TocPage
+                key={`figure-toc-${index}`}
+                entries={chunk}
+                pageMap={pageMap}
+                title={meta.title}
+                subtitle={meta.subtitle}
+                company={meta.company}
+                headingTitle="圖目錄"
+                showHeading={index === 0}
+              />
+            ))}
             <ReportPages
               pages={pages}
               title={meta.title}
@@ -285,6 +366,7 @@ export function PreviewPanel({
       </div>
 
       <div className="measure-host report-prose" aria-hidden ref={measureRef} />
+      <div className="measure-toc" aria-hidden ref={measureTocRef} />
     </div>
   )
 }

@@ -137,12 +137,18 @@ body {
   }
 
   .report-prose code,
-  .report-prose pre,
-  .report-prose th {
+  .report-prose pre {
     background: transparent !important;
   }
 
-  .measure-host {
+  .report-prose th {
+    background: #f5f6f8 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .measure-host,
+  .measure-toc {
     display: none !important;
   }
 }

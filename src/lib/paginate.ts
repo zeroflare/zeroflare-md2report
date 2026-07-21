@@ -26,6 +26,51 @@ function isHeading(el: HTMLElement): boolean {
   return /^H[1-6]$/.test(el.tagName)
 }
 
+function isTable(el: HTMLElement): boolean {
+  return el.tagName === 'TABLE'
+}
+
+/** Centered 表/圖 caption that should stay with the following table. */
+function isTableCaption(el: HTMLElement): boolean {
+  if (el.classList.contains('report-caption')) return true
+  if (el.tagName !== 'P') return false
+  const align = (el.getAttribute('align') || '').toLowerCase()
+  const style = el.getAttribute('style') || ''
+  const centered =
+    align === 'center' || /text-align\s*:\s*center/i.test(style)
+  if (!centered) return false
+  const text = (el.textContent || '').replace(/\s+/g, ' ').trim()
+  return text.startsWith('表') || text.startsWith('圖')
+}
+
+function shouldKeepWithPageEnd(el: HTMLElement): boolean {
+  return isHeading(el) || isTableCaption(el)
+}
+
+/**
+ * Caption + following table form one unit so they are not split across pages.
+ * If the pair is taller than one page, fall back to single nodes.
+ */
+function nextPackUnit(
+  nodes: HTMLElement[],
+  start: number,
+  contentHeightPx: number,
+): HTMLElement[] {
+  const first = nodes[start]
+  if (!first) return []
+
+  if (
+    isTableCaption(first) &&
+    start + 1 < nodes.length &&
+    isTable(nodes[start + 1])
+  ) {
+    const pair = [first, nodes[start + 1]]
+    if (groupHeight(pair) <= contentHeightPx) return pair
+  }
+
+  return [first]
+}
+
 /**
  * Group content so each H2 owns the following nodes until the next H2.
  * Content before the first H2 is its own preamble group.
@@ -52,7 +97,7 @@ function groupByH2(children: HTMLElement[]): HTMLElement[][] {
 /**
  * Pack content onto pages by height. Multiple H2 sections may share a page
  * when they fit; only start a new page when the next block would overflow.
- * Avoid leaving a heading stranded alone at the bottom of a page.
+ * Avoid leaving a heading or table caption stranded at the bottom of a page.
  */
 function appendNodesToPages(
   pages: HTMLElement[][],
@@ -66,26 +111,30 @@ function appendNodesToPages(
 
   let page = pages[pages.length - 1]
   let currentHeight = groupHeight(page)
+  let i = 0
 
-  for (const node of nodes) {
-    const height = elementBlockHeight(node)
+  while (i < nodes.length) {
+    const unit = nextPackUnit(nodes, i, contentHeightPx)
+    const height = groupHeight(unit)
     const pageEmpty = page.length === 0
 
     if (!pageEmpty && currentHeight + height > contentHeightPx) {
       const moved: HTMLElement[] = []
-      while (page.length > 0 && isHeading(page[page.length - 1])) {
+      while (page.length > 0 && shouldKeepWithPageEnd(page[page.length - 1])) {
         moved.unshift(page.pop()!)
       }
       if (page.length === 0) {
         pages.pop()
       }
-      pages.push([...moved, node])
+      pages.push([...moved, ...unit])
       page = pages[pages.length - 1]
       currentHeight = groupHeight(page)
     } else {
-      page.push(node)
+      page.push(...unit)
       currentHeight += height
     }
+
+    i += unit.length
   }
 }
 
@@ -140,30 +189,45 @@ export function paginateHtml(
 }
 
 /**
- * Estimate which body page number each heading id falls on,
+ * Estimate which body page number each element id falls on,
  * using the same measurement container.
  */
+export function mapIdsToPages(
+  container: HTMLElement,
+  contentHeightPx: number,
+  ids: string[],
+): Record<string, number> {
+  const children = Array.from(container.children) as HTMLElement[]
+  const pages = splitIntoPages(children, contentHeightPx)
+  const result: Record<string, number> = {}
+  const idSet = new Set(ids)
+
+  pages.forEach((nodes, index) => {
+    const pageNumber = index + 1
+    for (const node of nodes) {
+      if (node.id && idSet.has(node.id)) {
+        result[node.id] = pageNumber
+      }
+      for (const el of node.querySelectorAll('[id]')) {
+        if (el.id && idSet.has(el.id)) {
+          result[el.id] = pageNumber
+        }
+      }
+    }
+  })
+
+  for (const id of ids) {
+    if (!(id in result)) result[id] = 1
+  }
+
+  return result
+}
+
+/** @deprecated use mapIdsToPages */
 export function mapHeadingsToPages(
   container: HTMLElement,
   contentHeightPx: number,
   headingIds: string[],
 ): Record<string, number> {
-  const children = Array.from(container.children) as HTMLElement[]
-  const pages = splitIntoPages(children, contentHeightPx)
-  const result: Record<string, number> = {}
-
-  pages.forEach((nodes, index) => {
-    const pageNumber = index + 1
-    for (const node of nodes) {
-      if (node.id && headingIds.includes(node.id)) {
-        result[node.id] = pageNumber
-      }
-    }
-  })
-
-  for (const id of headingIds) {
-    if (!(id in result)) result[id] = 1
-  }
-
-  return result
+  return mapIdsToPages(container, contentHeightPx, headingIds)
 }

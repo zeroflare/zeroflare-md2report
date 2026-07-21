@@ -256,8 +256,13 @@
   margin-top: 0.25em;
 }
 
-.report-prose strong {
-  font-weight: 600;
+.report-prose strong,
+.report-prose b {
+  font-weight: bold;
+  font-synthesis: weight;
+  /* 標楷體無真正粗體時，合成並略加筆畫厚度 */
+  -webkit-text-stroke: 0.35px currentColor;
+  paint-order: stroke fill;
 }
 
 .report-prose code {
@@ -290,11 +295,13 @@
 }
 
 .report-prose table {
-  width: auto;
+  width: 100%;
   max-width: 100%;
+  table-layout: auto;
   border-collapse: collapse;
   margin: 0 0 0.85em;
   font-size: 0.85em;
+  box-sizing: border-box;
 }
 
 .report-prose th,
@@ -303,9 +310,10 @@
   padding: 0.3em 0.4em;
   text-align: left;
   vertical-align: top;
-  /* break-word: wrap only when needed; does NOT shrink column to 1 glyph */
-  overflow-wrap: break-word;
+  /* anywhere: allow columns to shrink so the table can fit page width */
+  overflow-wrap: anywhere;
   word-break: normal;
+  hyphens: none;
 }
 
 .report-prose th {
@@ -314,20 +322,16 @@
   font-synthesis: weight;
   -webkit-text-stroke: 0.35px currentColor;
   paint-order: stroke fill;
-  white-space: nowrap;
-  overflow-wrap: normal;
-  word-break: keep-all;
 }
 
 .report-prose td.cell-nowrap {
-  white-space: nowrap;
-  overflow-wrap: normal;
+  /* Prefer keeping short labels like Malicious on one line */
   word-break: keep-all;
 }
 
 .report-prose td.cell-break-long {
   overflow-wrap: anywhere;
-  word-break: break-word;
+  word-break: break-all;
 }
 
 .report-prose td code,
@@ -340,12 +344,6 @@
   padding: 0.05em 0.2em;
 }
 
-.report-prose th code {
-  white-space: nowrap;
-  overflow-wrap: normal;
-  word-break: keep-all;
-}
-
 .report-prose hr {
   border: none;
   border-top: 1px solid var(--report-rule);
@@ -356,6 +354,16 @@
   color: var(--report-link);
   text-decoration: underline;
   text-underline-offset: 2px;
+}
+
+.report-prose .report-caption,
+.report-prose p[align='center'] {
+  text-align: center;
+  font-weight: bold;
+  font-synthesis: weight;
+  -webkit-text-stroke: 0.35px currentColor;
+  paint-order: stroke fill;
+  margin: 1.1em 0 0.55em;
 }
 
 .report-prose img {

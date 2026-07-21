@@ -10,3 +10,10 @@ export interface TocEntry {
   text: string
   level: 2 | 3
 }
+
+/** Centered caption lines starting with 表 / 圖 */
+export interface CaptionEntry {
+  id: string
+  text: string
+  kind: 'table' | 'figure'
+}

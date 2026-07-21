@@ -1,5 +1,5 @@
 import { marked } from 'marked'
-import type { TocEntry } from '../types'
+import type { CaptionEntry, TocEntry } from '../types'
 
 marked.setOptions({
   gfm: true,
@@ -16,6 +16,84 @@ function slugify(text: string): string {
     || 'heading'
 }
 
+function uniqueId(base: string, seen: Map<string, number>): string {
+  const count = seen.get(base) ?? 0
+  seen.set(base, count + 1)
+  return count > 0 ? `${base}-${count}` : base
+}
+
+function decodeBasicEntities(text: string): string {
+  return text
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&quot;/gi, '"')
+}
+
+function stripTags(html: string): string {
+  return decodeBasicEntities(html.replace(/<[^>]+>/g, '')).replace(/\s+/g, ' ').trim()
+}
+
+/** Inner HTML may only contain text and simple inline tags. */
+function isPureTextHtml(inner: string): boolean {
+  const withoutInline = inner.replace(
+    /<\/?(?:strong|b|em|i|span|u|br)\b[^>]*>/gi,
+    '',
+  )
+  return !/<[^>]+>/.test(withoutInline)
+}
+
+function hasAlignCenter(attrs: string): boolean {
+  return /align\s*=\s*(["']?)center\1/i.test(attrs)
+}
+
+/**
+ * Find `<p align="center">…</p>` whose plain text starts with 表 / 圖.
+ * Used for 表目錄 / 圖目錄.
+ */
+export function extractCaptions(markdown: string): CaptionEntry[] {
+  const entries: CaptionEntry[] = []
+  const seen = new Map<string, number>()
+  const re = /<p\b([^>]*)>([\s\S]*?)<\/p>/gi
+  let match: RegExpExecArray | null
+
+  while ((match = re.exec(markdown)) !== null) {
+    const attrs = match[1]
+    const inner = match[2]
+    if (!hasAlignCenter(attrs)) continue
+    if (!isPureTextHtml(inner)) continue
+
+    const text = stripTags(inner)
+    if (!text) continue
+
+    let kind: CaptionEntry['kind'] | null = null
+    if (text.startsWith('表')) kind = 'table'
+    else if (text.startsWith('圖')) kind = 'figure'
+    else continue
+
+    const prefix = kind === 'table' ? 'table' : 'figure'
+    const id = uniqueId(`${prefix}-${slugify(text)}`, seen)
+    entries.push({ id, text, kind })
+  }
+
+  return entries
+}
+
+export function captionsByKind(captions: CaptionEntry[]): {
+  tables: CaptionEntry[]
+  figures: CaptionEntry[]
+} {
+  return {
+    tables: captions.filter((c) => c.kind === 'table'),
+    figures: captions.filter((c) => c.kind === 'figure'),
+  }
+}
+
+export function captionToTocEntry(caption: CaptionEntry): TocEntry {
+  return { id: caption.id, text: caption.text, level: 2 }
+}
+
 /** TOC includes `##` / `###` only — `#` is omitted from TOC and body. */
 export function extractHeadings(markdown: string): TocEntry[] {
   const entries: TocEntry[] = []
@@ -29,19 +107,46 @@ export function extractHeadings(markdown: string): TocEntry[] {
     const text = match[2].replace(/#+\s*$/, '').trim()
     if (!text) continue
 
-    let id = slugify(text)
-    const count = seen.get(id) ?? 0
-    seen.set(id, count + 1)
-    if (count > 0) id = `${id}-${count}`
-
+    const id = uniqueId(slugify(text), seen)
     entries.push({ id, text, level })
   }
 
   return entries
 }
 
+function enhanceCaptionAnchors(html: string, captions: CaptionEntry[]): string {
+  if (!captions.length || typeof document === 'undefined') return html
+
+  const container = document.createElement('div')
+  container.innerHTML = html
+  let index = 0
+
+  for (const p of container.querySelectorAll('p')) {
+    if (index >= captions.length) break
+
+    const align = (p.getAttribute('align') || '').toLowerCase()
+    const style = p.getAttribute('style') || ''
+    const centered =
+      align === 'center' || /text-align\s*:\s*center/i.test(style)
+    if (!centered) continue
+    if (!isPureTextHtml(p.innerHTML)) continue
+
+    const text = (p.textContent || '').replace(/\s+/g, ' ').trim()
+    const caption = captions[index]
+    const want = caption.kind === 'table' ? '表' : '圖'
+    if (!text.startsWith(want)) continue
+
+    p.id = caption.id
+    p.classList.add('report-caption')
+    index += 1
+  }
+
+  return container.innerHTML
+}
+
 export function renderMarkdown(markdown: string): string {
   const headings = extractHeadings(markdown)
+  const captions = extractCaptions(markdown)
   let headingIndex = 0
 
   const renderer = new marked.Renderer()
@@ -60,7 +165,10 @@ export function renderMarkdown(markdown: string): string {
     return originalHeading(token)
   }
 
-  return enhanceTableCellWrapping(marked.parse(markdown, { renderer }) as string)
+  let html = marked.parse(markdown, { renderer }) as string
+  html = enhanceTableCellWrapping(html)
+  html = enhanceCaptionAnchors(html, captions)
+  return html
 }
 
 /**
@@ -112,6 +220,8 @@ export const SAMPLE_MARKDOWN = `# 國家資通安全研究院資安顧問案
 ### 自動目錄
 
 系統會掃描 Markdown 中的 \`##\`／\`###\` 標題，自動建立目錄，並標示對應頁碼。\`#\` 不會出現在目錄與內文（封面另有標題）。
+
+置中且以「表」「圖」開頭的說明（例如 \`<p align="center"><strong>表 1　範例</strong></p>\`）會分別進入表目錄與圖目錄。
 
 ### 分頁與頁碼
 

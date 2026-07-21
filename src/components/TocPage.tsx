@@ -7,6 +7,11 @@ interface TocPageProps {
   title: string
   subtitle: string
   company: string
+  /** Section title shown at top of the first page of this TOC */
+  headingTitle?: string
+  emptyMessage?: string
+  /** Show the section title — only on the first page of this TOC */
+  showHeading?: boolean
 }
 
 export function TocPage({
@@ -15,6 +20,9 @@ export function TocPage({
   title,
   subtitle,
   company,
+  headingTitle = '目錄',
+  emptyMessage = '尚無標題。請在 Markdown 使用 ##、###。',
+  showHeading = true,
 }: TocPageProps) {
   const headerTitle = (title || '報告標題').replace(/\s+/g, ' ').trim()
   const headerSubtitle = subtitle.replace(/\s+/g, ' ').trim()
@@ -27,9 +35,9 @@ export function TocPage({
           <span className="page-header-subtitle">{headerSubtitle}</span>
         </header>
         <div className="toc-inner">
-          <h1 className="toc-heading">目錄</h1>
+          {showHeading ? <h1 className="toc-heading">{headingTitle}</h1> : null}
           {entries.length === 0 ? (
-            <p className="toc-empty">尚無標題。請在 Markdown 使用 #、##、###。</p>
+            <p className="toc-empty">{emptyMessage}</p>
           ) : (
             <ol className="toc-list">
               {entries.map((entry) => (

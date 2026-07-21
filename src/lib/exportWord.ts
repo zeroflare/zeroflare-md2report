@@ -17,7 +17,7 @@ import {
 import type { Tokens } from 'marked'
 import { marked } from 'marked'
 import type { CoverMeta } from '../types'
-import { extractHeadings } from './markdown'
+import { extractCaptions, extractHeadings, captionsByKind } from './markdown'
 
 const FONT = '標楷體'
 const BLACK = '000000'
@@ -213,6 +213,27 @@ function tokenToParagraphs(token: Tokens.Generic): Paragraph[] {
           children: [],
         }),
       ]
+    case 'html': {
+      const raw = String((token as Tokens.HTML).text || token.raw || '')
+      const pMatch = /<p\b([^>]*)>([\s\S]*?)<\/p>/i.exec(raw)
+      if (!pMatch) return []
+      const attrs = pMatch[1]
+      const inner = pMatch[2]
+      if (!/align\s*=\s*(["']?)center\1/i.test(attrs)) return []
+      const text = inner
+        .replace(/<[^>]+>/g, '')
+        .replace(/&nbsp;/gi, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+      if (!text) return []
+      return [
+        new Paragraph({
+          alignment: AlignmentType.CENTER,
+          spacing: { before: 200, after: 120 },
+          children: [textRun(text, { bold: true })],
+        }),
+      ]
+    }
     default:
       return []
   }
@@ -256,6 +277,7 @@ function coverParagraphs(meta: CoverMeta): Paragraph[] {
 
 function tocParagraphs(markdown: string): Paragraph[] {
   const headings = extractHeadings(markdown)
+  const { tables, figures } = captionsByKind(extractCaptions(markdown))
   const paras: Paragraph[] = [
     new Paragraph({
       alignment: AlignmentType.CENTER,
@@ -287,6 +309,47 @@ function tocParagraphs(markdown: string): Paragraph[] {
   }
 
   paras.push(new Paragraph({ children: [new PageBreak()] }))
+
+  if (tables.length) {
+    paras.push(
+      new Paragraph({
+        alignment: AlignmentType.CENTER,
+        spacing: { after: 280 },
+        children: [textRun('表目錄', { bold: true, size: 32 })],
+      }),
+    )
+    for (const entry of tables) {
+      paras.push(
+        new Paragraph({
+          spacing: { after: 100 },
+          indent: { left: convertInchesToTwip(0.2) },
+          children: [textRun(entry.text, { bold: false })],
+        }),
+      )
+    }
+    paras.push(new Paragraph({ children: [new PageBreak()] }))
+  }
+
+  if (figures.length) {
+    paras.push(
+      new Paragraph({
+        alignment: AlignmentType.CENTER,
+        spacing: { after: 280 },
+        children: [textRun('圖目錄', { bold: true, size: 32 })],
+      }),
+    )
+    for (const entry of figures) {
+      paras.push(
+        new Paragraph({
+          spacing: { after: 100 },
+          indent: { left: convertInchesToTwip(0.2) },
+          children: [textRun(entry.text, { bold: false })],
+        }),
+      )
+    }
+    paras.push(new Paragraph({ children: [new PageBreak()] }))
+  }
+
   return paras
 }
 
