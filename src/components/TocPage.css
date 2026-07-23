@@ -19,7 +19,7 @@
   font-family: var(--font-display);
   font-size: 1.75rem;
   font-weight: bold;
-  font-synthesis: weight;
+  font-synthesis: none;
   color: #000;
   letter-spacing: -0.02em;
   text-align: center;

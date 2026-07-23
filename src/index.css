@@ -32,6 +32,20 @@
   background: var(--surface);
 }
 
+/*
+ * Preview = PDF: 標楷體 has no Bold. Never faux-bold / stroke on report pages
+ * (those inflate Chrome PDF via Type3 paths). Hierarchy stays via size / rules.
+ */
+.a4-page,
+.a4-page *,
+.report-prose,
+.report-prose * {
+  font-synthesis: none;
+  -webkit-text-stroke: 0;
+  -webkit-text-stroke-width: 0;
+  paint-order: normal;
+}
+
 *,
 *::before,
 *::after {
@@ -117,13 +131,64 @@ body {
     background: #fff !important;
   }
 
-  /* Preserve fills, borders, and strokes when saving as PDF */
+  /*
+   * Same as screen preview: no faux-bold / stroke (keeps PDF size reasonable).
+   */
   .a4-page,
   .a4-page *,
   .report-prose,
   .report-prose * {
+    -webkit-text-stroke: 0 !important;
+    -webkit-text-stroke-width: 0 !important;
+    -webkit-text-stroke-color: transparent !important;
+    paint-order: normal !important;
+    text-shadow: none !important;
+    filter: none !important;
+    backdrop-filter: none !important;
+    box-shadow: none !important;
+    transform: none !important;
+    font-synthesis: none !important;
+    -webkit-font-smoothing: auto !important;
+    text-rendering: auto !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+  }
+
+  .a4-page,
+  .a4-page * {
+    font-family: '標楷體', 'BiauKai', 'DFKai-SB', 'TW-Kai', 'KaiTi', 'STKaiti',
+      serif !important;
+  }
+
+  .cover-title,
+  .cover-subtitle,
+  .cover-company,
+  .cover-date,
+  .toc-heading,
+  .page-header-title,
+  .page-header-subtitle,
+  .page-footer-company,
+  .page-number,
+  .report-prose h1,
+  .report-prose h2,
+  .report-prose h3,
+  .report-prose h4,
+  .report-prose h5,
+  .report-prose h6,
+  .report-prose strong,
+  .report-prose b,
+  .report-prose th,
+  .report-prose .report-caption,
+  .report-prose p[align='center'] {
+    font-weight: 700 !important;
+  }
+
+  .report-prose code,
+  .report-prose pre,
+  .report-prose code *,
+  .report-prose pre * {
+    font-family: 'Courier New', Courier, monospace !important;
+    font-weight: 400 !important;
   }
 
   .report-prose code,
