@@ -10,6 +10,7 @@ import {
 import {
   CONTENT_HEIGHT_PX,
   PAGE_BOTTOM_SAFETY_PX,
+  TOC_BOTTOM_SAFETY_PX,
   mapIdsToPages,
   paginateHtml,
   type PageChunk,
@@ -111,8 +112,18 @@ export function PreviewPanel({
     if (!stack || !measure) return
 
     const tocInner = stack.querySelector('.toc-inner') as HTMLElement | null
-    const rawHeight = tocInner?.clientHeight || CONTENT_HEIGHT_PX
-    const contentHeight = Math.max(200, rawHeight - PAGE_BOTTOM_SAFETY_PX)
+    let contentHeight = CONTENT_HEIGHT_PX - TOC_BOTTOM_SAFETY_PX
+    if (tocInner) {
+      const style = window.getComputedStyle(tocInner)
+      const padY =
+        (parseFloat(style.paddingTop) || 0) +
+        (parseFloat(style.paddingBottom) || 0)
+      // clientHeight includes padding; only the content box is usable for rows
+      contentHeight = Math.max(
+        200,
+        tocInner.clientHeight - padY - TOC_BOTTOM_SAFETY_PX,
+      )
+    }
     const { tables, figures } = captionsByKind(captions)
 
     const nextToc = measureAndPaginateToc(

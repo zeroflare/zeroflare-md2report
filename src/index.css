@@ -131,6 +131,16 @@ body {
     background: #fff !important;
   }
 
+  /* Keep TOC clipped so last row never paints over the footer rule in print */
+  .toc-inner {
+    overflow: hidden !important;
+  }
+
+  .page-footer {
+    background: #fff !important;
+    z-index: 2 !important;
+  }
+
   /*
    * Same as screen preview: no faux-bold / stroke (keeps PDF size reasonable).
    */
