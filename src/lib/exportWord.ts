@@ -116,11 +116,11 @@ function tokenToParagraphs(token: Tokens.Generic): Paragraph[] {
           heading: level,
           spacing: { before: 280, after: 140 },
           border:
-            t.depth === 2
+            t.depth === 2 || t.depth === 3
               ? {
                   bottom: {
                     style: BorderStyle.SINGLE,
-                    size: 12,
+                    size: t.depth === 2 ? 12 : 8,
                     color: '555555',
                     space: 4,
                   },

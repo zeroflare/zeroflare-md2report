@@ -209,7 +209,8 @@ body {
   }
 
   .report-prose h1,
-  .report-prose h2 {
+  .report-prose h2,
+  .report-prose h3 {
     border-bottom-color: #1a2a3a !important;
   }
 
