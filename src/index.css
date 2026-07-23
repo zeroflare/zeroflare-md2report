@@ -104,8 +104,6 @@ body {
     background: #fff !important;
     page-break-after: always;
     break-after: page;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
   }
 
   .a4-page:last-child {
@@ -119,32 +117,35 @@ body {
     background: #fff !important;
   }
 
-  .report-prose h1,
-  .report-prose h2 {
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-  }
-
-  .page-frame,
-  .page-header,
-  .page-footer,
-  .page-header::before,
-  .page-header::after,
-  .page-footer::before,
-  .page-footer::after {
+  /* Preserve fills, borders, and strokes when saving as PDF */
+  .a4-page,
+  .a4-page *,
+  .report-prose,
+  .report-prose * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
 
   .report-prose code,
   .report-prose pre {
+    background: #f0f2f4 !important;
+  }
+
+  .report-prose pre code {
     background: transparent !important;
   }
 
   .report-prose th {
     background: #f5f6f8 !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
+  }
+
+  .report-prose blockquote {
+    border-left-color: #c8a96e !important;
+  }
+
+  .report-prose h1,
+  .report-prose h2 {
+    border-bottom-color: #1a2a3a !important;
   }
 
   .measure-host,
