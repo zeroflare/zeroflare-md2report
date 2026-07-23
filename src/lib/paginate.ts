@@ -4,8 +4,8 @@ export const CONTENT_HEIGHT_PX = 880
 /** Leave room so last block (tables) never sits under the footer rule */
 export const PAGE_BOTTOM_SAFETY_PX = 40
 
-/** Extra clearance for TOC rows vs. footer double-rule (print can overflow slightly) */
-export const TOC_BOTTOM_SAFETY_PX = 56
+/** Small clearance after subtracting toc-inner padding (measurement vs print) */
+export const TOC_BOTTOM_SAFETY_PX = 12
 
 export interface PageChunk {
   html: string
