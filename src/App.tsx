@@ -42,8 +42,19 @@ export default function App() {
   }, [meta, markdown])
 
   const handleExportPdf = useCallback(() => {
+    const prevTitle = document.title
+    const base = (meta.subtitle || meta.title || '報告')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .replace(/[\\/:*?"<>|]/g, '')
+    document.title = base || '報告'
+    const restore = () => {
+      document.title = prevTitle
+      window.removeEventListener('afterprint', restore)
+    }
+    window.addEventListener('afterprint', restore)
     window.print()
-  }, [])
+  }, [meta.subtitle, meta.title])
 
   const handleExportWord = useCallback(async () => {
     await exportWord(meta, markdown)

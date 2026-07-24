@@ -218,8 +218,19 @@
 .report-prose h3 {
   font-size: 1.05rem;
   margin: 1.1em 0 0.35em;
-  padding-bottom: 0.25em;
-  border-bottom: 2px solid #1a2a3a;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.report-prose h3::after {
+  content: '';
+  display: block;
+  width: 80%;
+  height: 1px;
+  margin-top: 0.25em;
+  background: #1a2a3a;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
 }
 
 .report-prose h4 {

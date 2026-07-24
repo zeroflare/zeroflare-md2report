@@ -411,7 +411,9 @@ function pageFooter(meta: CoverMeta, withPageNumber: boolean): Footer {
 }
 
 function safeFileName(meta: CoverMeta): string {
-  const base = (meta.title || '報告').replace(/\s+/g, '').replace(/[\\/:*?"<>|]/g, '')
+  const base = (meta.subtitle || meta.title || '報告')
+    .replace(/\s+/g, '')
+    .replace(/[\\/:*?"<>|]/g, '')
   return `${base || '報告'}.docx`
 }
 
